@@ -1,0 +1,255 @@
+
+# what is Webservice
+Software system designed to support interoperable 
+machine-to machine interact over a network
+
+# 3 Keys
+	- Machine to machine interaction
+	- Interoperable - Platform independent
+	- Allow communication over a network
+
+# Service definition
+	1. Endpoint
+	2. Request
+	3. Response
+
+Transport Medium:
+HTTP -> MQ
+
+# Types/Groups/Kind of web services:-
+
+	1. SOAP: Simple Object Access Protocal
+	
+	Xml format is used
+	
+	SOAP ENVELOPE:
+		SOAP HEADER
+		SOAP BODY
+	
+	Service definiton
+		WSDL :- Request,Response,Operation
+		
+	2. REST: Representational State Transfer
+	
+		XML/JSON
+		
+		HTTP Methods: GET POST PUT DELETE
+		HTTP Codes: 200, 404, 500
+	
+	Only via HTTP
+	URI (Resource) - Uniform resource identfr
+		No standard service definition
+		WADL/Swagger
+		
+# REST VS SOAP
+
+	- Restrictions vs architectural approach
+	- Data exchange format
+	- Service definition
+	- Transport
+	- Ease of implementation
+
+------------------------------------------
+
+Social media application
+
+User -> Posts
+
+- Get all users - GET /users
+- Create a user - POST /users
+- Get one user - GET /users/1
+- Delete a User - DELETE /users/1
+
+- Get all posts for a user - GET /users/1/posts
+- Create a post - POST /users/1/posts
+- Get details of a post - GET /users/1/posts/123
+
+# What is dipatcher servlet ?
+
+application.properties
+logging.level.org.springframework = debug
+
+#Spring Auto configuration
+
+	- Configures 
+		the dispatcher servlet
+		error mapping
+		converts bean to json
+	
+	@ResponseBody - converts into json
+	
+
+# Created state in Response entity
+	URI location = ServletUriComponentsBuilder.
+				 fromCurrentRequest()
+				.path("/user")
+				.buildAndExpand(user.getId())
+				.toUri();
+	return ResponseEntity.created(location).build();
+
+# Exception handling
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+you user in the class header to return different status code
+
+extending Class ResponseEntityExceptionHandler
+@ControllerAdvice
+@RestController 
+
+# Validation
+@Size(min = 2, message = "name should be more than 2 chars")
+@Valid
+@Past
+override handleMethodArgumentNotValid
+MethodArgumentNotValidException
+
+########################### ADVANCE FEATURES #####################################3
+
+### Internationalization
+
+#Configuration
+ - LocaleResolver
+ 	- Default locale: Locale.US
+ 	
+ 	 @Bean
+    LocaleResolver localeResolver() {
+	SessionLocaleResolver localeResolver = new SessionLocaleResolver();
+	//	AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
+	localeResolver.setDefaultLocale(Locale.US);
+	return localeResolver;
+    }
+
+ - ResourceBundleMessageSource
+ 
+ 	@Bean
+    ResourceBundleMessageSource bundleMessageSource() {
+	ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+	messageSource.setBasename("messages");
+	return messageSource;
+    }
+    alternative
+    //spring.messages.basename=messages
+ 
+	@GetMapping(path = "/hello-bean-int")
+    public String helloBeanInt(@RequestHeader(name="Accept-Language",required = false) Locale locale) {
+	return messageSource.getMessage("demo.message", null, locale);
+	//return messageSource.getMessage("demo.message", null, LocaleContextHolder.getLocale());
+    }
+
+#### context negotiation
+
+<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml -->
+<dependency>
+    <groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-xml</artifactId>
+    <version>2.8.3</version>
+</dependency>
+
+
+pass Accept:application/xml in header
+
+
+#### Swagger integration
+
+spring fox swagger 2 dependencies
+
+<dependency>
+	<groupId>io.springfox</groupId>
+	<artifactId>springfox-boot-starter</artifactId>
+	<version>3.0.0</version>
+</dependency>
+
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+    @Bean
+    public Docket api() {
+	return new Docket(DocumentationType.SWAGGER_2);
+    }
+}
+
+localhost:8080/v2/api-docs
+http://localhost:8080/swagger-ui.html
+
+#### Monitoring api with actuator
+
+<artifactId>spring-boot-starter-actuator</artifactId>
+http://localhost:8080/actuator
+management.endpoints.web.exposure.include=*
+
+## Filtering attributes
+
+#Static filtering
+@JsonIgnore
+@JsonIgnoreProperties(value={"v1","v2"})
+
+#Dynamic filtering
+ 	@GetMapping("/filtering-dy")
+    MappingJacksonValue getBeanDy() {
+	SampleBean bean = new SampleBean("v1", "v2", "v3");
+	SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("v1", "v2");
+	FilterProvider filters = new SimpleFilterProvider().addFilter("SampleFilter", filter);
+	MappingJacksonValue mapping = new MappingJacksonValue(bean);
+	mapping.setFilters(filters);
+	return mapping;
+    }
+
+##### versioning the apis
+
+URI Versioning (No perfect solution)
+http://localhost:8080/v1/person
+
+Request para versioning
+http://localhost:8080/person?version=2
+@GetMapping(value = "/person", params = "version=1")
+
+Custom header versioning
+http://localhost:8080/person/header
+@GetMapping(value = "/person/header", headers = "version=2")
+
+Media versioning
+@GetMapping(value = "/person/header", produces = "application/com.demo1.")
+
+
+#### Spring security authentication
+
+# Basic authentication
+
+by default spring configures basic auth with default security password
+
+default user id: user
+
+you can set in application.properties
+security.user.name=user
+security.user.password=123
+
+#### Spring data JPA using H2 DB
+
+in application.properties
+#H2 settings
+#spring.h2.console.path=/h2-console
+#spring.datasource.driverClassName=org.h2.Driver
+#spring.datasource.username=sa
+#spring.datasource.password=
+#spring.jpa.hibernate.ddl-auto=update
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.data.jpa.repositories.bootstrap-mode=default
+spring.jpa.show-sql=true
+spring.h2.console.enabled=true
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+@Entity
+public class User {
+
+    @Id
+    @GeneratedValue
+    Integer id;
+    
+schema.sql and data.sql
+
+
+
+
