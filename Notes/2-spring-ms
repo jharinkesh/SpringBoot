@@ -48,15 +48,127 @@ public class Configuration {
     private int minimum;
     private int maximum;
     
+#### Config server
+
+#appliction.proprties
+spring.application.name=config-server
+server.port=8888
+spring.cloud.config.server.git.uri=file:///Users/rinkeshjha/git-local-repo
+    
 ## git init to create a new repo in localhost
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+# limits-service.properties
+limits-service.minimum=10
+limits-service.maximum=100
+
+## Main class in config server
+
+@EnableConfigServer
+@SpringBootApplication
+public class ConfigServerApplication {
+
+url: localhost:8888/limits-service/default
+
+# for different envs
+create multiple files in git repo
+limits-service-dev.properties
+limits-service-qa.properties
+
+Add the following properties in the consumer
+spring.cloud.config.uri=http://localhost:8888
+spring.profiles.active=dev
+
+http://localhost:8888/limits-service/qa for qa config
+
+How to run spring app using dynamic port
+-Dserver.port=8000
+
+http://localhost:8000/currency-exchange/from/USD/to/INR
+http://localhost:8001/currency-exchange/from/USD/to/INR
+
+##### Rest template 
+Map<String, String> uriVariables = new HashMap<>();
+	uriVariables.put("from", from);
+	uriVariables.put("to", to);
+	ResponseEntity<CurrencyConversionBean> response = new RestTemplate().getForEntity(
+		"http://localhost:8000/currency-exchange/from/{from}/to/{to}", CurrencyConversionBean.class,
+		uriVariables);
+
+	CurrencyConversionBean obj = response.getBody();
+	
+
+###### Feign component
+
+@FeignClient(name = "currency-exchange-service", url = "localhost:8000")
+public interface CurrencyExchangeClient {
+
+    @GetMapping("currency-exchange/from/{from}/to/{to}")
+    public CurrencyConversionBean getExchangeValue(@PathVariable String to, @PathVariable String from);
+
+###### Ribbon load balancer
+
+Add the following in the feign client
+@FeignClient(name = "currency-exchange-service")
+@RibbonClient(name = "currency-exchange-service")
+
+in application.properties
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+
+
+###### Eureka naming server
+Service Registration
+Service discovery - checking the available instance of a service
+
+application.properties
+spring.application.name=eureka-naming-server
+server.port=8761
+eureka.client.register-with-eureka=false
+eureka.client.fecth-registry=false
+
+make changes in the other ms properies
+eureka.client.service-url.default-zone=http://localhost:8761
+comment out 
+#currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+
+============================================
+#Zuul API Gateway
+1.Authentication, Authorisation & security
+2.Rate limits
+3.Fault toleration
+4.Service aggregation
+
+
+<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-zuul</artifactId>
+</dependency>
+
+@EnableZuulProxy
+@EnableDiscoveryClient
+@SpringBootApplication
+public class ZullApiGatewayApplication {
+
+
+ZuulLoggingFilter implements all the filters methods
+
+application.properties of zuul gateway
+spring.application.name=zuul-api-gateway
+server.port=8765
+eureka.client-service-url.default-zone=http://localhost:8761
+
+
+@FeignClient(name = "zuul-api-gateway")
+@RibbonClient(name = "currency-exchange-service")
+public interface CurrencyExchangeClient {
+
+//    @GetMapping("currency-exchange/from/{from}/to/{to}")
+    @GetMapping("currency-exchange-service/currency-exchange/from/{from}/to/{to}")
+
+http://localhost:8765/{appname}/{uri}
+http://localhost:8765/currency-conversion-service/currency-converter-feign/from/USD/to/INR/quantity/150
+
+
+
+
+
+

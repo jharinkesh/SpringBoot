@@ -33,7 +33,7 @@ public class UserJPAResource {
 
     @GetMapping("/jpa/users/{userId}")
     public User getUser(@PathVariable Integer userId) {
-	Optional<User> user = repository.findById(userId);
+	Optional<User> user = repository.findById((long) userId);
 	if (user.isEmpty())
 	    throw new UserNotFoundException("id: " + userId);
 	return user.get();
@@ -49,6 +49,6 @@ public class UserJPAResource {
 
     @DeleteMapping("/jpa/users/{userId}")
     public void deleteUser(@PathVariable Integer userId) {
-	repository.deleteById(userId);
+	repository.deleteById((long) userId);
     }
 }
